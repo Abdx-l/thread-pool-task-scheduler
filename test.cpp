@@ -10,7 +10,7 @@ int main(){
   bool caught=false;try{failure.get();}catch(const std::runtime_error&){caught=true;}assert(caught);
  }assert(count==100000);
  std::promise<void> gate;auto ready=gate.get_future().share();
- ThreadPool one(1);auto blocking=one.submit([ready]{ready.wait();});
+ ThreadPool one(1);std::promise<void> entered;auto started=entered.get_future();auto blocking=one.submit([ready,&entered]{entered.set_value();ready.wait();});started.wait();
  std::vector<int> order;auto a=one.submit([&]{order.push_back(1);},1);auto b=one.submit([&]{order.push_back(2);},9);
  gate.set_value();a.get();b.get();assert((order==std::vector<int>{2,1}));
 }
